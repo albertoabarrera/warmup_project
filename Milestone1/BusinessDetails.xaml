@@ -11,9 +11,9 @@
         <Label x:Name="stateLabel" Content="State" HorizontalAlignment="Left" Margin="10,62,0,0" VerticalAlignment="Top"/>
         <Label x:Name="cityLabel" Content="City" HorizontalAlignment="Left" Margin="10,93,0,0" VerticalAlignment="Top"/>
         
-        <TextBox x:Name="bname" HorizontalAlignment="Left" Height="23" Margin="251,35,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120"/>
-        <TextBox x:Name="state" HorizontalAlignment="Left" Height="23" Margin="251,65,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120"/>
-        <TextBox x:Name="city" HorizontalAlignment="Left" Height="23" Margin="251,96,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="bnameBox" HorizontalAlignment="Left" Height="23" Margin="251,35,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="stateBox" HorizontalAlignment="Left" Height="23" Margin="251,65,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="cityBox" HorizontalAlignment="Left" Height="23" Margin="251,96,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120"/>
         
         <Label x:Name="label" Content="Number of businesses in the same city: " HorizontalAlignment="Left" Margin="10,163,0,0" VerticalAlignment="Top"/>
         <Label x:Name="label2" Content="Number of businesses in the same state: " HorizontalAlignment="Left" Margin="10,194,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.084,0.518"/>

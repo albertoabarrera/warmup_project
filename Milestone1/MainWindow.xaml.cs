@@ -44,40 +44,11 @@ namespace Milestone1
 
         public void addStates()
         {
-            using (var connection = new NpgsqlConnection(buildConnectionString()))
-            {
-                connection.Open();
-
-                using (var cmd = new NpgsqlCommand())
-                {
-                    cmd.Connection = connection;
-
-                    // Create the text query
-                    cmd.CommandText = "SELECT distinct state FROM business ORDER BY state";
-
-                    try
-                    {   
-                        // execute command
-                        var reader = cmd.ExecuteReader();
-                        // iterate through results and add the read item into the list of state combobox
-                        while (reader.Read())
-                            stateList.Items.Add(reader.GetString(0));
-                    }
-                    catch (NpgsqlException ex)
-                    {
-                        Console.WriteLine(ex.Message.ToString());
-                        System.Windows.MessageBox.Show("SQL Error: " + ex.Message.ToString());
-                    }
-                    finally
-                    {
-                        connection.Close();
-                    }
-                }
-
-            }
-
+            string query = "SELECT distinct state FROM business ORDER BY state";
+            executeQuery(query, populateStatesInBox);
         }
 
+        // Function to add header to the grid.
         private void addColumnsToGrid()
         {
             DataGridTextColumn col1 = new DataGridTextColumn();
@@ -104,106 +75,102 @@ namespace Milestone1
             col4.Width = 0;
             dataGrid.Columns.Add(col4);
 
-            dataGrid.Items.Add(new Business() { name = "bus1", state = "WA", city = "Seattle" });
-
         }
 
+        // General query function
+        public void executeQuery(string query, Action<NpgsqlDataReader> func)
+        {
+            using (var connection = new NpgsqlConnection(buildConnectionString()))
+            {
+                connection.Open();
+                using (var cmd = new NpgsqlCommand())
+                {
+                    cmd.Connection = connection;
+                    cmd.CommandText = query;
+                    try
+                    {
+                        // execute command
+                        var reader = cmd.ExecuteReader();
+                        // iterate through results and add the read item into the list of state combobox
+                        while (reader.Read())
+                            func(reader);
+                    }
+                    catch (NpgsqlException ex)
+                    {
+                        Console.WriteLine(ex.Message.ToString());
+                        System.Windows.MessageBox.Show("SQL Error: " + ex.Message.ToString());
+                    }
+                    finally
+                    {
+                        connection.Close();
+                    }
+
+                }
+            }
+        }
+
+        // lambda func to execute initial query to populate the states
+        private void populateStatesInBox(NpgsqlDataReader reader)
+        {
+            stateList.Items.Add(reader.GetString(0));
+        }
+
+        // Lambda func for selecting a state and populating the second box with cities.
+        private void populateCitiesInBox(NpgsqlDataReader reader)
+        {
+            cityList.Items.Add(reader.GetString(0));
+        }
+
+        // Lambda Func for adding business rows based on state and city selected
+        private void addGridRow(NpgsqlDataReader reader)
+        {
+            dataGrid.Items.Add(new Business()
+            {
+                name = reader.GetString(0),
+                state = reader.GetString(1),
+                city = reader.GetString(2),
+                bid = reader.GetString(3)
+            });
+        }
+
+        // Call the DB and populate cities based on state.
         private void stateList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             cityList.Items.Clear();
 
             if (stateList.SelectedIndex > -1)
             {
+                string query = "SELECT distinct city FROM business WHERE state = \'" + stateList.SelectedItem.ToString() + "\' ORDER BY city";
+                executeQuery(query, populateCitiesInBox);
+            }
+        }
 
-                using (var connection = new NpgsqlConnection(buildConnectionString()))
-                {
-                    connection.Open();
-
-                    using (var cmd = new NpgsqlCommand())
-                    {
-                        cmd.Connection = connection;
-
-                        // Create the text query
-                        cmd.CommandText = "SELECT distinct city FROM business WHERE state = \'" + stateList.SelectedItem.ToString() + "\' ORDER BY city";
-
-                        try
-                        {
-                            // execute command
-                            var reader = cmd.ExecuteReader();
-                            // iterate through results and add the read item into the list of state combobox
-                            while (reader.Read())
-                                cityList.Items.Add(reader.GetString(0));
-                        }
-                        catch (NpgsqlException ex)
-                        {
-                            Console.WriteLine(ex.Message.ToString());
-                            System.Windows.MessageBox.Show("SQL Error: " + ex.Message.ToString());
-                        }
-                        finally
-                        {
-                            connection.Close();
-                        }
-
-                    }// using
-                } // using
-            } // if
-        }// method end
-
+        // When a city is selected, we want to reload the businesses
         private void cityList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             dataGrid.Items.Clear();
 
             if (cityList.SelectedIndex > -1)
             {
-
-                using (var connection = new NpgsqlConnection(buildConnectionString()))
-                {
-                    connection.Open();
-
-                    using (var cmd = new NpgsqlCommand())
-                    {
-                        cmd.Connection = connection;
-
-                        // Create the text query
-                        cmd.CommandText = "SELECT name, state, city, business_id FROM business WHERE state = \'" + stateList.SelectedItem.ToString() + "\' AND city = \'" +cityList.SelectedItem.ToString()+ "\' ORDER BY name";
-
-                        try
-                        {
-                            // execute command
-                            var reader = cmd.ExecuteReader();
-                            // iterate through results and add the read item into the list of state combobox
-                            while (reader.Read())
-                            {
-                                dataGrid.Items.Add(new Business()
-                                { 
-                                    name = reader.GetString(0), 
-                                    state = reader.GetString(1), 
-                                    city = reader.GetString(2),
-                                    bid = reader.GetString(3)
-                                });
-                            }
-                                
-                        }
-                        catch (NpgsqlException ex)
-                        {
-                            Console.WriteLine(ex.Message.ToString());
-                            System.Windows.MessageBox.Show("SQL Error: " + ex.Message.ToString());
-                        }
-                        finally
-                        {
-                            connection.Close();
-                        }
-
-                    }// using
-                } // using
-            } // if
+                // Create the text query
+                string query = "SELECT name, state, city, business_id FROM business WHERE state = \'" +
+                    stateList.SelectedItem.ToString() +
+                    "\' AND city = \'" +
+                    cityList.SelectedItem.ToString() +
+                    "\' ORDER BY name";
+                executeQuery(query, addGridRow);
+            }
         }
 
+        // New window for when a business is selected from grid
         private void dataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dataGrid.SelectedIndex >= 0)
             {
+                // TODO how does this cast work??
                 Business B = dataGrid.Items[dataGrid.SelectedIndex] as Business;
+
+                // if business id is not null or empty
                 if ((B.bid != null) && (B.bid.ToString().CompareTo("") != 0))
                 {
                     BusinessDetails businessWindow = new BusinessDetails(B.bid.ToString());
